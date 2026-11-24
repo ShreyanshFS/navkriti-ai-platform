@@ -1,0 +1,487 @@
+import { db } from "@/db";
+import { artisans, buyers, conversations, designs, messages, orders, reviews } from "@/db/schema";
+import { count, eq } from "drizzle-orm";
+
+const P = "/images/concepts";
+const px = (id: number) => `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940`;
+
+const ARTISANS = [
+  {
+    name: "Ritu Bala",
+    phone: "98290 11223",
+    craft: "Chikankari & Block Print",
+    category: "textiles",
+    tagline: "Feather-light chikankari kurtis, finished with hand-block borders on sleeves & hem.",
+    bio: "I learned chikankari from my mother in Lucknow and now run a seven-woman studio in Jaipur. I specialise in custom kurtis and dupattas where fine white-on-white stitching on the yoke meets a bold block-printed border around the hands and hem.",
+    city: "Jaipur",
+    state: "Rajasthan",
+    lat: 26.9124,
+    lng: 75.7873,
+    years: 12,
+    rating: 4.8,
+    reviewCount: 88,
+    startingPrice: 900,
+    avatar: "https://images.pexels.com/photos/8584553/pexels-photo-8584553.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=300&w=300",
+    cover: `${P}/kantha-terracotta.jpg`,
+    portfolio: [`${P}/kantha-terracotta.jpg`, `${P}/ajrakh-indigo.jpg`, px(28855659), px(39180709)],
+    techniques: ["Chikankari", "Block printing", "Aari work", "Custom Kurti Tailoring"],
+    languages: ["Hindi", "English", "Marwari"],
+    verified: true,
+    acceptingOrders: true,
+  },
+  {
+    name: "Masterji Farhan Khan",
+    phone: "98281 44019",
+    craft: "Master Tailor & Boutique Karigar",
+    category: "textiles",
+    tagline: "Bespoke kurtis, blouses & ethnic silhouettes stitched with artisan block & zari trims.",
+    bio: "20 years as a master cutter and boutique tailor in Johari Bazaar, Jaipur. Send me your AI custom kurti or blouse concept — I source authentic Bagru block borders, chikankari panels and mulmul fabrics, stitch to your measurements, and deliver to your door.",
+    city: "Jaipur",
+    state: "Rajasthan",
+    lat: 26.9196,
+    lng: 75.824,
+    years: 20,
+    rating: 4.9,
+    reviewCount: 114,
+    startingPrice: 750,
+    avatar: px(38556299),
+    cover: `${P}/banarasi-saree.jpg`,
+    portfolio: [`${P}/banarasi-saree.jpg`, `${P}/kantha-terracotta.jpg`, `${P}/ajrakh-indigo.jpg`, px(29848182)],
+    techniques: ["Custom Tailoring", "Kurti & Blouse Stitching", "Block Print Borders", "Zari & Gota Finishing"],
+    languages: ["Hindi", "Urdu", "English"],
+    verified: true,
+    acceptingOrders: true,
+  },
+  {
+    name: "Arvind Chhipa",
+    phone: "98795 44551",
+    craft: "Ajrakh Block Printing",
+    category: "textiles",
+    tagline: "Nine generations of natural-dye printers in Kutch.",
+    bio: "Our family has printed ajrakh in Ajrakhpur for nine generations, only with indigo, madder and iron-black. I take custom orders for dupattas, stoles, yardage and bedcovers.",
+    city: "Ajrakhpur, Kutch",
+    state: "Gujarat",
+    lat: 23.7337,
+    lng: 69.8597,
+    years: 26,
+    rating: 4.9,
+    reviewCount: 142,
+    startingPrice: 1200,
+    avatar: px(38938853),
+    cover: `${P}/ajrakh-indigo.jpg`,
+    portfolio: [`${P}/ajrakh-indigo.jpg`, px(39180709), px(38938861), px(6634602)],
+    techniques: ["Ajrakh", "Dabu resist", "Natural dyes", "Block printing"],
+    languages: ["Gujarati", "Hindi"],
+    verified: true,
+    acceptingOrders: true,
+  },
+  {
+    name: "Meera Devi",
+    phone: "94310 77889",
+    craft: "Madhubani Painting",
+    category: "paintings",
+    tagline: "Mithila linework, natural pigments, no shortcuts.",
+    bio: "Third-generation Mithila artist. I paint tree-of-life, kohbar and peacock narratives on handmade paper and canvas using only natural pigments.",
+    city: "Madhubani",
+    state: "Bihar",
+    lat: 26.35,
+    lng: 86.07,
+    years: 22,
+    rating: 4.9,
+    reviewCount: 64,
+    startingPrice: 2500,
+    avatar: px(12640857),
+    cover: `${P}/madhubani.jpg`,
+    portfolio: [`${P}/madhubani.jpg`, px(36817155), `${P}/pichwai.jpg`, px(40047904)],
+    techniques: ["Madhubani", "Kohbar", "Natural pigments", "Tree of life"],
+    languages: ["Maithili", "Hindi"],
+    verified: true,
+    acceptingOrders: true,
+  },
+  {
+    name: "Sunita Sharma",
+    phone: "98310 66778",
+    craft: "Kantha Embroidery",
+    category: "textiles",
+    tagline: "A 14-woman collective stitching kantha, cloth by cloth.",
+    bio: "We stitch kantha on quilts, cushions and stoles in Shantiniketan. Every piece is signed by the woman who made it, and offcuts from tailoring units are upcycled into new textiles.",
+    city: "Shantiniketan",
+    state: "West Bengal",
+    lat: 23.677,
+    lng: 87.6866,
+    years: 15,
+    rating: 4.9,
+    reviewCount: 74,
+    startingPrice: 800,
+    avatar: px(4406722),
+    cover: `${P}/kantha-terracotta.jpg`,
+    portfolio: [`${P}/kantha-terracotta.jpg`, px(6634602), `${P}/ajrakh-indigo.jpg`],
+    techniques: ["Kantha", "Running stitch", "Quilting", "Upcycled textiles"],
+    languages: ["Bengali", "Hindi", "English"],
+    verified: true,
+    acceptingOrders: true,
+  },
+  {
+    name: "Rafiq Ansari",
+    phone: "98390 22114",
+    craft: "Banarasi Handloom",
+    category: "textiles",
+    tagline: "Pit-loom brocade, woven to order in Varanasi.",
+    bio: "Master weaver on pit looms in Peeli Kothi. Kadhwa brocade sarees, dupattas and zari yardage — each piece takes a month or more, and it is worth it.",
+    city: "Varanasi",
+    state: "Uttar Pradesh",
+    lat: 25.3176,
+    lng: 82.9739,
+    years: 30,
+    rating: 4.7,
+    reviewCount: 210,
+    startingPrice: 6500,
+    avatar: px(23494589),
+    cover: `${P}/banarasi-saree.jpg`,
+    portfolio: [`${P}/banarasi-saree.jpg`, `${P}/ajrakh-indigo.jpg`, px(29848182)],
+    techniques: ["Handloom", "Brocade", "Zari", "Kadhwa"],
+    languages: ["Hindi", "Bhojpuri", "English"],
+    verified: true,
+    acceptingOrders: true,
+  },
+  {
+    name: "Kailash Soni",
+    phone: "94140 56782",
+    craft: "Pichwai Painting",
+    category: "paintings",
+    tagline: "Stone colours and real gold, from Nathdwara.",
+    bio: "I paint devotional Pichwais of Shrinathji, lotus ponds and Kamdhenu using traditional stone colours with gold detailing, and take commissions for homes and temples.",
+    city: "Nathdwara",
+    state: "Rajasthan",
+    lat: 24.93,
+    lng: 73.82,
+    years: 25,
+    rating: 4.9,
+    reviewCount: 51,
+    startingPrice: 8000,
+    avatar: px(40047904),
+    cover: `${P}/pichwai.jpg`,
+    portfolio: [`${P}/pichwai.jpg`, `${P}/madhubani.jpg`, px(36817155)],
+    techniques: ["Pichwai", "Gold leaf", "Lotus motifs", "Miniature detail"],
+    languages: ["Hindi", "Marwari"],
+    verified: true,
+    acceptingOrders: true,
+  },
+  {
+    name: "Imran Sheikh",
+    phone: "94150 33445",
+    craft: "Chikankari Embroidery",
+    category: "textiles",
+    tagline: "Lucknowi needlework on mulmul and chanderi.",
+    bio: "Chikankari in the old Lucknow way — bakhiya, murri, jaali. I make kurtas and kurtis to measure with your choice of motifs and borders.",
+    city: "Lucknow",
+    state: "Uttar Pradesh",
+    lat: 26.8467,
+    lng: 80.9462,
+    years: 18,
+    rating: 4.8,
+    reviewCount: 132,
+    startingPrice: 1600,
+    avatar: px(38556299),
+    cover: `${P}/kantha-terracotta.jpg`,
+    portfolio: [`${P}/kantha-terracotta.jpg`, `${P}/banarasi-saree.jpg`, px(28855659)],
+    techniques: ["Chikankari", "Murri", "Jaali", "Bakhiya"],
+    languages: ["Hindi", "Urdu", "English"],
+    verified: true,
+    acceptingOrders: true,
+  },
+  {
+    name: "Nandini Rao",
+    phone: "98450 99887",
+    craft: "Kalamkari & Contemporary",
+    category: "paintings",
+    tagline: "Kalamkari linework, contemporary scale.",
+    bio: "Studio artist in Hyderabad bridging kalamkari linework with contemporary abstracts. Murals, canvases and commissioned portraits.",
+    city: "Hyderabad",
+    state: "Telangana",
+    lat: 17.385,
+    lng: 78.4867,
+    years: 12,
+    rating: 4.6,
+    reviewCount: 38,
+    startingPrice: 3000,
+    avatar: px(12640857),
+    cover: `${P}/abstract-canvas.jpg`,
+    portfolio: [`${P}/abstract-canvas.jpg`, px(31009986), `${P}/madhubani.jpg`],
+    techniques: ["Kalamkari", "Abstract", "Murals", "Portraits"],
+    languages: ["Telugu", "Hindi", "English"],
+    verified: true,
+    acceptingOrders: true,
+  },
+];
+
+const BUYERS = [
+  { name: "Aarav Mehta", phone: "98765 43210", city: "Jaipur", lat: 26.9124, lng: 75.7873, avatar: px(4406722) },
+  { name: "Ishita Kapoor", phone: "98111 22334", city: "Delhi", lat: 28.6139, lng: 77.209, avatar: px(8584553) },
+  { name: "Meera Nair", phone: "99001 55667", city: "Bengaluru", lat: 12.9716, lng: 77.5946, avatar: px(36817155) },
+];
+
+const REVIEW_SEED: { artisan: string; buyer: string; rating: number; body: string }[] = [
+  { artisan: "Ritu Bala", buyer: "Aarav Mehta", rating: 5, body: "Sent a one-line idea for a chikankari kurti with block-print sleeve borders and got a concept back immediately. The yoke & sleeve finishing are spot on." },
+  { artisan: "Ritu Bala", buyer: "Ishita Kapoor", rating: 5, body: "Beautiful finishing on the sleeve borders and she shipped in 10 days. Will order again." },
+  { artisan: "Ritu Bala", buyer: "Meera Nair", rating: 4, body: "Lovely work. Slightly longer than promised but the quality made up for it." },
+  { artisan: "Masterji Farhan Khan", buyer: "Aarav Mehta", rating: 5, body: "Best custom tailor in Jaipur! Sent him the AI kurti blueprint and the fit + Bagru cuff border came out exactly like the render." },
+  { artisan: "Masterji Farhan Khan", buyer: "Ishita Kapoor", rating: 5, body: "Stitched two custom kurtis with chikankari yokes and block-printed cuffs. Perfect fit on the first try." },
+  { artisan: "Arvind Chhipa", buyer: "Aarav Mehta", rating: 5, body: "Real natural indigo, you can smell the difference. My dupatta is now the family heirloom." },
+  { artisan: "Arvind Chhipa", buyer: "Ishita Kapoor", rating: 5, body: "He suggested a better border than my reference. That is real expertise." },
+  { artisan: "Meera Devi", buyer: "Meera Nair", rating: 5, body: "The tree of life has so much detail in person. Packed beautifully, arrived without a crease." },
+  { artisan: "Meera Devi", buyer: "Aarav Mehta", rating: 5, body: "She shared sketches before painting — I felt part of the process." },
+  { artisan: "Sunita Sharma", buyer: "Aarav Mehta", rating: 5, body: "Eight cushion covers, all slightly different, all gorgeous. Café customers keep asking." },
+  { artisan: "Sunita Sharma", buyer: "Ishita Kapoor", rating: 4, body: "Warm terracotta exactly as the render. Very sturdy stitching." },
+  { artisan: "Rafiq Ansari", buyer: "Meera Nair", rating: 5, body: "A month of weaving and worth every day. The zari catches light like nothing machine-made." },
+  { artisan: "Kailash Soni", buyer: "Ishita Kapoor", rating: 5, body: "Commissioned a pichwai for our mandir. The gold detailing is breathtaking." },
+  { artisan: "Imran Sheikh", buyer: "Aarav Mehta", rating: 4, body: "Neat chikankari on a custom kurta. Measurement guidance over chat was very helpful." },
+  { artisan: "Nandini Rao", buyer: "Meera Nair", rating: 5, body: "My abstract canvas is the first thing guests comment on. Great colour sense." },
+];
+
+let seeded = false;
+
+export async function ensureSeeded() {
+  if (seeded) return;
+  const [{ value }] = await db.select({ value: count() }).from(artisans);
+  if (value > 0) {
+    seeded = true;
+    return;
+  }
+
+  const artistRows = await db.insert(artisans).values(ARTISANS).returning();
+  const buyerRows = await db.insert(buyers).values(BUYERS).returning();
+  const artist = (n: string) => artistRows.find((a) => a.name === n)!;
+  const buyer = (n: string) => buyerRows.find((b) => b.name === n)!;
+
+  await db.insert(reviews).values(REVIEW_SEED.map((r) => ({ artisanId: artist(r.artisan).id, buyerName: r.buyer, rating: r.rating, body: r.body })));
+
+  const aarav = buyer("Aarav Mehta");
+
+  const [kurtiDesign, cushionDesign, dupattaDesign] = await db
+    .insert(designs)
+    .values([
+      {
+        buyerId: aarav.id,
+        artisanId: artist("Ritu Bala").id,
+        title: "Ivory Chikankari + Block Print Kurti for work wear",
+        prompt: "I want a kurti with chikankari design on the yoke and the area around the hand with a rust block pattern design. Cotton mulmul, for work, budget around ₹3,400, needed in two weeks.",
+        craft: "Chikankari + Block printing",
+        category: "textiles",
+        itemType: "Kurti",
+        materials: ["Cotton mulmul", "Resham chikankari thread", "Teakwood block natural pigments"],
+        colors: [
+          { name: "Ivory", hex: "#EFE7D8" },
+          { name: "Rust", hex: "#C1502E" },
+          { name: "Sage", hex: "#8FA98F" },
+        ],
+        budget: 3400,
+        timelineDays: 14,
+        notes: "Structured as a custom chikankari + block printing kurti in ivory, rust and sage for work wear. Zones mapped: Yoke & Neckline (Lucknowi Chikankari) · Sleeves & Hand Area (Hand-Block Pattern Border) · Body & Silhouette (Chikankari Booti Field) · Hem / Daaman Border (Block printing Patti).",
+        spec: {
+          palette: ["#EFE7D8", "#C1502E", "#5F7A52", "#2B3A8F", "#26221E"],
+          motif: "floral",
+          sleeveMotif: "geometric",
+          layout: "kurti",
+          seed: 40021,
+          photoUrl: "/images/concepts/kantha-terracotta.jpg",
+          zones: [
+            { zone: "Yoke & Neckline", technique: "Lucknowi Chikankari (Bakhiya & Murri)", detail: "Dense floral needlework in ivory & sage around the gala panel" },
+            { zone: "Sleeves & Hand Area", technique: "Hand-Block Pattern Border", detail: "Custom geometric Bagru block patti around the wrist/hand cuffs in rust contrast" },
+            { zone: "Body & Silhouette", technique: "Chikankari Booti Field", detail: "Small scattered bootis on breathable mulmul cotton base, tailored to measure" },
+            { zone: "Hem / Daaman Border", technique: "Block printing Patti", detail: "Matching rust block-print border along the bottom hem and side slits" },
+          ],
+        },
+        status: "sent",
+      },
+      {
+        buyerId: aarav.id,
+        artisanId: artist("Imran Sheikh").id,
+        title: "Ivory Chikankari Kurta for wedding",
+        prompt: "A white chikankari kurta for my sister's mehendi, light jaali work on the chest, full sleeves. Around 4,000 and I need it in three weeks.",
+        craft: "Chikankari",
+        category: "textiles",
+        itemType: "Kurti",
+        materials: ["Cotton mulmul", "Chikankari thread"],
+        colors: [
+          { name: "Ivory", hex: "#EFE7D8" },
+          { name: "Sage", hex: "#8FA98F" },
+        ],
+        budget: 4000,
+        timelineDays: 21,
+        notes: "Read as a chikankari kurta in ivory for a wedding. Jaali and murri work suggested on the yoke with a subtle sage thread shadow.",
+        spec: {
+          palette: ["#EFE7D8", "#8FA98F", "#C1502E", "#2B3A8F", "#26221E"],
+          motif: "floral",
+          sleeveMotif: "paisley",
+          layout: "kurti",
+          seed: 8814,
+          photoUrl: "/images/concepts/kantha-terracotta.jpg",
+          zones: [
+            { zone: "Yoke & Neckline", technique: "Jaali & Murri Chikankari", detail: "Hand-embroidered chest panel" },
+            { zone: "Sleeves & Hand Area", technique: "Fine Chikankari Cuff", detail: "Narrow embroidered cuff strip" },
+          ],
+        },
+        status: "sent",
+      },
+      {
+        buyerId: aarav.id,
+        artisanId: artist("Sunita Sharma").id,
+        title: "Terracotta Kantha Cushion Covers — Set of 8",
+        prompt: "8 kantha cushion covers in terracotta and cream for our new cafe seating, sturdy stitching, around 6,000 total.",
+        craft: "Kantha",
+        category: "textiles",
+        itemType: "Cushion covers",
+        materials: ["Cotton duck", "Kantha thread"],
+        colors: [
+          { name: "Terracotta", hex: "#C1502E" },
+          { name: "Ivory", hex: "#F3EAD8" },
+        ],
+        budget: 6150,
+        timelineDays: 21,
+        notes: "Read as kantha cushions in terracotta and ivory for a café. Double-stitch suggested for durability.",
+        spec: {
+          palette: ["#C1502E", "#F3EAD8", "#5F7A52", "#8A5A3B", "#26221E"],
+          motif: "geometric",
+          layout: "swatch",
+          seed: 66112,
+          photoUrl: "/images/concepts/kantha-terracotta.jpg",
+        },
+        status: "locked",
+      },
+      {
+        buyerId: aarav.id,
+        artisanId: null as string | null,
+        title: "Indigo Ajrakh Dupatta Draft",
+        prompt: "A dupatta like my grandmother's old ajrakh — deep indigo with a little red, natural dyes.",
+        craft: "Ajrakh",
+        category: "textiles",
+        itemType: "Dupatta",
+        materials: ["Handloom cotton", "Natural indigo & madder"],
+        colors: [
+          { name: "Indigo", hex: "#2B3A8F" },
+          { name: "Madder red", hex: "#9E2B25" },
+          { name: "Ivory", hex: "#EFE7D8" },
+        ],
+        budget: 2900,
+        timelineDays: 12,
+        notes: "Saved draft from the AI studio.",
+        spec: {
+          palette: ["#2B3A8F", "#9E2B25", "#EFE7D8", "#26221E", "#C1502E"],
+          motif: "lattice",
+          layout: "panel",
+          seed: 991,
+          photoUrl: "/images/concepts/ajrakh-indigo.jpg",
+        },
+        status: "draft",
+      },
+    ])
+    .returning();
+
+  const [convo1, convo2, convo3] = await db
+    .insert(conversations)
+    .values([
+      { designId: kurtiDesign.id, buyerId: aarav.id, artisanId: artist("Ritu Bala").id, status: "open", lastAt: new Date() },
+      { designId: dupattaDesign.id, buyerId: aarav.id, artisanId: artist("Imran Sheikh").id, status: "open", lastAt: new Date(Date.now() - 3600_000) },
+      { designId: cushionDesign.id, buyerId: aarav.id, artisanId: artist("Sunita Sharma").id, status: "locked", lastAt: new Date(Date.now() - 86400_000) },
+    ])
+    .returning();
+
+  await db.insert(messages).values([
+    {
+      conversationId: convo1.id,
+      senderRole: "buyer",
+      senderName: aarav.name,
+      body: "Hi Ritu ji! I generated this custom kurti in the AI studio — chikankari on the yoke and a rust block-pattern border around the hands/sleeves and hem. Can you make this in mulmul?",
+      kind: "text",
+      createdAt: new Date(Date.now() - 7200_000),
+    },
+    {
+      conversationId: convo1.id,
+      senderRole: "artisan",
+      senderName: "Ritu Bala",
+      body: "Namaste Aarav ji — yes, the zone breakdown is crystal clear! I will use murri and bakhiya chikankari on the yoke, and a 3-inch rust dabu block-printed border around the sleeves/wrists. Shipping to Jaipur is included.",
+      kind: "quote",
+      amount: 3400,
+      etaDays: 12,
+      createdAt: new Date(Date.now() - 5400_000),
+    },
+    {
+      conversationId: convo1.id,
+      senderRole: "buyer",
+      senderName: aarav.name,
+      body: "Lovely. Could we keep the block border slightly wider on the sleeves and hold it at ₹3,300?",
+      kind: "text",
+      createdAt: new Date(Date.now() - 3600_000),
+    },
+    {
+      conversationId: convo1.id,
+      senderRole: "artisan",
+      senderName: "Ritu Bala",
+      body: "Done — ₹3,300 with a 4-inch block pattern cuff around the hands. I can begin Monday and share photos as I go.",
+      kind: "text",
+      createdAt: new Date(Date.now() - 1800_000),
+    },
+    {
+      conversationId: convo2.id,
+      senderRole: "buyer",
+      senderName: aarav.name,
+      body: "Sent you a design for a white chikankari kurta for my sister's mehendi. Is three weeks enough?",
+      kind: "text",
+      createdAt: new Date(Date.now() - 4000_000),
+    },
+    {
+      conversationId: convo3.id,
+      senderRole: "buyer",
+      senderName: aarav.name,
+      body: "The design is ready — 8 covers, terracotta and cream, café seating. Double-stitched if possible.",
+      kind: "text",
+      createdAt: new Date(Date.now() - 4 * 86400_000),
+    },
+    {
+      conversationId: convo3.id,
+      senderRole: "artisan",
+      senderName: "Sunita Sharma",
+      body: "We can do all eight in matching kantha with a double stitch. Sending a sample photo in six days.",
+      kind: "quote",
+      amount: 6150,
+      etaDays: 21,
+      createdAt: new Date(Date.now() - 3 * 86400_000),
+    },
+    {
+      conversationId: convo3.id,
+      senderRole: "system",
+      senderName: "Navkriti",
+      body: "Deal locked at ₹6,150 · delivery in 21 days to Jaipur.",
+      kind: "system",
+      createdAt: new Date(Date.now() - 2 * 86400_000),
+    },
+  ]);
+
+  await db.insert(orders).values({
+    conversationId: convo3.id,
+    designId: cushionDesign.id,
+    buyerId: aarav.id,
+    artisanId: artist("Sunita Sharma").id,
+    amount: 6150,
+    address: "B-14, Malviya Nagar",
+    city: "Jaipur",
+    pincode: "302017",
+    etaDays: 21,
+    note: "Double-stitched, sample photo before the full lot.",
+    status: "in_progress",
+    createdAt: new Date(Date.now() - 2 * 86400_000),
+  });
+
+  seeded = true;
+}
+
+export async function artisanCount() {
+  const [{ value }] = await db.select({ value: count() }).from(artisans);
+  return value;
+}
+
+export async function findArtisanByName(name: string) {
+  const rows = await db.select().from(artisans).where(eq(artisans.name, name));
+  return rows[0] ?? null;
+}
