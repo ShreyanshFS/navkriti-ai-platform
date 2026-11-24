@@ -26,6 +26,7 @@ import {
 import { clearSession, useSession } from "@/lib/session";
 import type { ArtisanT, ConversationT, MessageT, OrderRow, ReviewT, SessionUser } from "@/lib/types";
 import { Avatar, Badge, Btn, Empty, Modal, Spinner, Stars } from "@/components/ui";
+import SafeImg from "@/components/safe-img";
 import { DesignArtwork } from "@/components/design-artwork";
 import { AwsArchitectureModal } from "@/components/aws-modal";
 import { Cloud, Layers, Plus } from "lucide-react";
@@ -534,7 +535,7 @@ export default function SellerPortal() {
                 <div className="overflow-hidden rounded-2xl border-[1.5px] border-ink/12 bg-cream">
                   <div className="relative h-36">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={profile.cover} alt={profile.craft} className="h-full w-full object-cover" />
+                    <SafeImg src={profile.cover} alt={profile.craft} className="h-full w-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-ink/70 to-transparent" />
                     <div className="absolute -bottom-6 left-4 flex items-end gap-3">
                       <Avatar name={profile.name} src={profile.avatar} size={62} color="#2B3A8F" className="border-[3px] border-cream" />
@@ -566,7 +567,7 @@ export default function SellerPortal() {
                       <div className="mt-2 grid grid-cols-4 gap-2">
                         {profile.portfolio.map((src, i) => (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img key={i} src={src} alt={`Work ${i + 1}`} className="aspect-square w-full rounded-lg border border-ink/10 object-cover" />
+                          <SafeImg key={i} src={src} alt={`Work ${i + 1}`} className="aspect-square w-full rounded-lg border border-ink/10 object-cover" />
                         ))}
                       </div>
                       <div className="mt-3 flex gap-2">

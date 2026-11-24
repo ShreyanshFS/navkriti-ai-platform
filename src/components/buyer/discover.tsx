@@ -17,6 +17,7 @@ import {
 import type { ArtisanT, ReviewT, SessionUser } from "@/lib/types";
 import { formatDistance } from "@/lib/studio";
 import { Avatar, Badge, Btn, Empty, Modal, Spinner, Stars } from "@/components/ui";
+import SafeImg from "@/components/safe-img";
 
 export function Discover({
   buyer,
@@ -166,7 +167,7 @@ export function Discover({
                 className="relative aspect-[16/9] cursor-pointer overflow-hidden"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <SafeImg
                   src={a.cover}
                   alt={`${a.craft} by ${a.name}`}
                   className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -229,7 +230,7 @@ export function Discover({
                       title="Click to view previous designs"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={img} alt="" className="h-full w-full object-cover transition-transform hover:scale-110" />
+                      <SafeImg src={img} alt="" className="h-full w-full object-cover transition-transform hover:scale-110" />
                     </button>
                   ))}
                 </div>
@@ -408,7 +409,7 @@ export function ArtistModal({
                   className="group relative aspect-square cursor-zoom-in overflow-hidden rounded-xl border-[1.5px] border-ink/12 bg-sand"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <SafeImg
                     src={src}
                     alt={`${artisan.craft} sample ${i + 1} by ${artisan.name}`}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -518,7 +519,7 @@ export function ArtistModal({
             <X className="size-5" />
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={lightbox} alt="Artisan work" className="max-h-[85vh] w-auto max-w-full rounded-xl object-contain" />
+          <SafeImg src={lightbox} alt="Artisan work" className="max-h-[85vh] w-auto max-w-full rounded-xl object-contain" />
         </div>
       )}
     </Modal>
